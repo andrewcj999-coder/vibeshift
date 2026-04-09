@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeShift - Steal the Vibe</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{background:#0a0a0a;color:#fff;min-height:100vh;padding:20px}
+.container{max-width:800px;margin:0 auto}
+h1{font-size:48px;background:linear-gradient(135deg,#ff006e,#8338ec,#3a86ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+.subtitle{color:#888;margin-bottom:40px}
+.card{background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:24px;margin-bottom:20px}
+input{width:100%;background:#0a0a0a;border:1px solid #333;color:#fff;padding:14px;border-radius:12px;font-size:16px;margin-bottom:12px}
+button{background:linear-gradient(135deg,#ff006e,#8338ec);color:#fff;border:none;padding:14px 28px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%}
+button:disabled{opacity:0.5}
+.colors{display:flex;gap:8px;margin:16px 0}
+.color{width:50px;height:50px;border-radius:8px;border:2px solid #333}
+.style-item{background:#0a0a0a;padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid #222}
+.hidden{display:none}
+.auth-toggle{color:#8338ec;cursor:pointer;text-decoration:underline;margin-top:12px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>VibeShift</h1>
+  <p class="subtitle">Paste a YouTube Short ? Steal its vibe ? Apply to your video</p>
+
+  <div id="auth" class="card">
+    <h2 id="auth-title">Sign Up</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password (min 6 chars)">
+    <button id="auth-btn">Create Account</button>
+    <span class="auth-toggle" id="toggle">Already have account? Login</span>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="card">
+      <h2>Analyze Style</h2>
+      <input id="yturl" placeholder="https://youtube.com/shorts/...">
+      <button id="analyze">Analyze Vibe</button>
+      <div id="result" class="hidden" style="margin-top:20px">
+        <h3 id="title"></h3>
+        <p style="color:#888;margin:8px 0">Vibe: <span id="vibe" style="color:#fff"></span></p>
+        <div class="colors" id="colors"></div>
+        <img id="thumb" style="width:100%;max-width:300px;border-radius:12px;margin-top:12px">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Your Styles</h2>
+      <div id="styles">Loading...</div>
+    </div>
+    
+    <button id="logout" style="background:#333;margin-top:20px">Logout</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://rzgrdamzgeyyotazrapz.supabase.co";
+const SUPABASE_ANON = "sb_publishable_Po8DdRAuP2wUijaNPMOEXQ_1Mf5gE0s";
+const AI_URL = "https://andrewcj999-vibeshift-ai.hf.space";
+
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let isLogin = false;
+const authDiv = document.getElementById('auth');
+const appDiv = document.getElementById('app');
+
+document.getElementById('toggle').onclick = () => {
+  isLogin = !isLogin;
+  document.getElementById('auth-title').textContent = isLogin ? 'Login' : 'Sign Up';
+  document.getElementById('auth-btn').textContent = isLogin ? 'Login' : 'Create Account';
+  document.getElementById('toggle').textContent = isLogin ? 'Need account? Sign up' : 'Already have account? Login';
+};
+
+document.getElementById('auth-btn').onclick = async () => {
+  const email = document.getElementById('email').value;
+  const pass = document.getElementById('password').value;
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true;
+  
+  const fn = isLogin ? supa.auth.signInWithPassword : supa.auth.signUp;
+  const {error} = await fn({email, password: pass});
+  
+  if(error) alert(error.message);
+  else checkAuth();
+  btn.disabled = false;
+};
+
+document.getElementById('logout').onclick = async () => {
+  await supa.auth.signOut();
+  location.reload();
+};
+
+async function checkAuth() {
+  const {data} = await supa.auth.getUser();
+  if(data.user) {
+    authDiv.classList.add('hidden');
+    appDiv.classList.remove('hidden');
+    loadStyles();
+  }
+}
+
+document.getElementById('analyze').onclick = async () => {
+  const url = document.getElementById('yturl').value;
+  if(!url) return alert('Paste YouTube URL');
+  
+  const btn = document.getElementById('analyze');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  
+  try {
+    const res = await fetch(AI_URL + '/analyze', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({youtube_url: url})
+    });
+    const data = await res.json();
+    
+    document.getElementById('title').textContent = data.title;
+    document.getElementById('vibe').textContent = data.vibe;
+    document.getElementById('thumb').src = data.thumbnail;
+    
+    const colorsDiv = document.getElementById('colors');
+    colorsDiv.innerHTML = '';
+    data.colors.forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'color';
+      d.style.background = c;
+      d.title = c;
+      colorsDiv.appendChild(d);
+    });
+    
+    document.getElementById('result').classList.remove('hidden');
+    
+    const {data: {user}} = await supa.auth.getUser();
+    await supa.from('styles').insert({
+      user_id: user.id,
+      name: data.title,
+      youtube_url: url,
+      vibe: data.vibe,
+      colors: data.colors
+    });
+    
+    loadStyles();
+    document.getElementById('yturl').value = '';
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+  
+  btn.disabled = false;
+  btn.textContent = 'Analyze Vibe';
+};
+
+async function loadStyles() {
+  const {data} = await supa.from('styles').select('*').order('created_at', {ascending:false});
+  const div = document.getElementById('styles');
+  if(!data || data.length === 0) {
+    div.innerHTML = '<p style="color:#666">No styles yet. Analyze one above.</p>';
+    return;
+  }
+  div.innerHTML = data.map(s => `
+    <div class="style-item">
+      <strong>${s.name}</strong>
+      <p style="color:#888;font-size:14px;margin:4px 0">${s.vibe}</p>
+      <div style="display:flex;gap:4px;margin-top:8px">
+        ${s.colors.map(c => `<div style="width:24px;height:24px;background:${c};border-radius:4px"></div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+checkAuth();
+</script>
+</body>
+</html>
