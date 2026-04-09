@@ -1,178 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VibeShift - Steal the Vibe</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-body{background:#0a0a0a;color:#fff;min-height:100vh;padding:20px}
-.container{max-width:800px;margin:0 auto}
-h1{font-size:48px;background:linear-gradient(135deg,#ff006e,#8338ec,#3a86ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
-.subtitle{color:#888;margin-bottom:40px}
-.card{background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:24px;margin-bottom:20px}
-input{width:100%;background:#0a0a0a;border:1px solid #333;color:#fff;padding:14px;border-radius:12px;font-size:16px;margin-bottom:12px}
-button{background:linear-gradient(135deg,#ff006e,#8338ec);color:#fff;border:none;padding:14px 28px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%}
-button:disabled{opacity:0.5}
-.colors{display:flex;gap:8px;margin:16px 0}
-.color{width:50px;height:50px;border-radius:8px;border:2px solid #333}
-.style-item{background:#0a0a0a;padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid #222}
-.hidden{display:none}
-.auth-toggle{color:#8338ec;cursor:pointer;text-decoration:underline;margin-top:12px;display:inline-block}
-</style>
+<title>VibeShift</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>body{background:#0a0a0a;color:#fff;font-family:system-ui;padding:20px}h1{font-size:42px;background:linear-gradient(90deg,#ff006e,#8338ec);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.card{background:#1a1a1a;padding:20px;border-radius:12px;margin:20px 0;max-width:500px}input{width:100%;padding:12px;margin:8px 0;background:#000;border:1px solid #333;color:#fff;border-radius:8px}button{width:100%;padding:12px;background:linear-gradient(90deg,#ff006e,#8338ec);border:none;color:#fff;border-radius:8px;font-weight:bold;cursor:pointer}.hidden{display:none}.colors{display:flex;gap:6px;margin:10px 0}.c{width:40px;height:40px;border-radius:6px}</style>
 </head>
 <body>
-<div class="container">
-  <h1>VibeShift</h1>
-  <p class="subtitle">Paste a YouTube Short ? Steal its vibe ? Apply to your video</p>
-
-  <div id="auth" class="card">
-    <h2 id="auth-title">Sign Up</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password (min 6 chars)">
-    <button id="auth-btn">Create Account</button>
-    <span class="auth-toggle" id="toggle">Already have account? Login</span>
-  </div>
-
-  <div id="app" class="hidden">
-    <div class="card">
-      <h2>Analyze Style</h2>
-      <input id="yturl" placeholder="https://youtube.com/shorts/...">
-      <button id="analyze">Analyze Vibe</button>
-      <div id="result" class="hidden" style="margin-top:20px">
-        <h3 id="title"></h3>
-        <p style="color:#888;margin:8px 0">Vibe: <span id="vibe" style="color:#fff"></span></p>
-        <div class="colors" id="colors"></div>
-        <img id="thumb" style="width:100%;max-width:300px;border-radius:12px;margin-top:12px">
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Your Styles</h2>
-      <div id="styles">Loading...</div>
-    </div>
-    
-    <button id="logout" style="background:#333;margin-top:20px">Logout</button>
-  </div>
+<h1>VibeShift</h1>
+<p style="color:#888">Paste YouTube Short → Steal vibe</p>
+<div id="auth" class="card">
+<h2 id="at">Sign Up</h2>
+<input id="em" placeholder="Email" type="email">
+<input id="pw" placeholder="Password" type="password">
+<button id="ab">Create Account</button>
+<p id="tg" style="color:#a855f7;cursor:pointer;margin-top:10px;text-decoration:underline">Already have account? Login</p>
 </div>
-
+<div id="app" class="hidden">
+<div class="card">
+<input id="yt" placeholder="https://youtube.com/shorts/...">
+<button id="an">Analyze Vibe</button>
+<div id="rs" class="hidden" style="margin-top:15px">
+<h3 id="tt"></h3>
+<p>Vibe: <span id="vb"></span></p>
+<div class="colors" id="cl"></div>
+<img id="im" style="max-width:100%;border-radius:8px;margin-top:10px">
+</div>
+</div>
+</div>
 <script>
-const SUPABASE_URL = "https://rzgrdamzgeyyotazrapz.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Z3JkYW16Z2V5eW90YXpyYXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDY4NTIsImV4cCI6MjA5MTMyMjg1Mn0.ilJX_ZDKPYr2vyTUvrymsMIEH15Oprsj6LoxohEWPbQ";
-const AI_URL = "https://andrewcj999-vibeshift-ai.hf.space";
-
-const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
+const S_URL="https://rzgrdamzgeyyotazrapz.supabase.co";
+const S_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Z3JkYW16Z2V5eW90YXpyYXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDY4NTIsImV4cCI6MjA5MTMyMjg1Mn0.ilJX_ZDKPYr2vyTUvrymsMIEH15Oprsj6LoxohEWPbQ";
+const AI="https://andrewcj999-vibeshift-ai.hf.space";
+const sb = window.supabase.createClient(S_URL, S_KEY);
 let isLogin = false;
-const authDiv = document.getElementById('auth');
-const appDiv = document.getElementById('app');
-
-document.getElementById('toggle').onclick = () => {
-  isLogin = !isLogin;
-  document.getElementById('auth-title').textContent = isLogin ? 'Login' : 'Sign Up';
-  document.getElementById('auth-btn').textContent = isLogin ? 'Login' : 'Create Account';
-  document.getElementById('toggle').textContent = isLogin ? 'Need account? Sign up' : 'Already have account? Login';
-};
-
-document.getElementById('auth-btn').onclick = async () => {
-  const email = document.getElementById('email').value;
-  const pass = document.getElementById('password').value;
-  const btn = document.getElementById('auth-btn');
-  btn.disabled = true;
-  
-  const fn = isLogin ? supa.auth.signInWithPassword : supa.auth.signUp;
-  const {error} = await fn({email, password: pass});
-  
-  if(error) alert(error.message);
-  else checkAuth();
-  btn.disabled = false;
-};
-
-document.getElementById('logout').onclick = async () => {
-  await supa.auth.signOut();
-  location.reload();
-};
-
-async function checkAuth() {
-  const {data} = await supa.auth.getUser();
-  if(data.user) {
-    authDiv.classList.add('hidden');
-    appDiv.classList.remove('hidden');
-    loadStyles();
-  }
-}
-
-document.getElementById('analyze').onclick = async () => {
-  const url = document.getElementById('yturl').value;
-  if(!url) return alert('Paste YouTube URL');
-  
-  const btn = document.getElementById('analyze');
-  btn.disabled = true;
-  btn.textContent = 'Analyzing...';
-  
-  try {
-    const res = await fetch(AI_URL + '/analyze', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({youtube_url: url})
-    });
-    const data = await res.json();
-    
-    document.getElementById('title').textContent = data.title;
-    document.getElementById('vibe').textContent = data.vibe;
-    document.getElementById('thumb').src = data.thumbnail;
-    
-    const colorsDiv = document.getElementById('colors');
-    colorsDiv.innerHTML = '';
-    data.colors.forEach(c => {
-      const d = document.createElement('div');
-      d.className = 'color';
-      d.style.background = c;
-      d.title = c;
-      colorsDiv.appendChild(d);
-    });
-    
-    document.getElementById('result').classList.remove('hidden');
-    
-    const {data: {user}} = await supa.auth.getUser();
-    await supa.from('styles').insert({
-      user_id: user.id,
-      name: data.title,
-      youtube_url: url,
-      vibe: data.vibe,
-      colors: data.colors
-    });
-    
-    loadStyles();
-    document.getElementById('yturl').value = '';
-  } catch(e) {
-    alert('Error: ' + e.message);
-  }
-  
-  btn.disabled = false;
-  btn.textContent = 'Analyze Vibe';
-};
-
-async function loadStyles() {
-  const {data} = await supa.from('styles').select('*').order('created_at', {ascending:false});
-  const div = document.getElementById('styles');
-  if(!data || data.length === 0) {
-    div.innerHTML = '<p style="color:#666">No styles yet. Analyze one above.</p>';
-    return;
-  }
-  div.innerHTML = data.map(s => `
-    <div class="style-item">
-      <strong>${s.name}</strong>
-      <p style="color:#888;font-size:14px;margin:4px 0">${s.vibe}</p>
-      <div style="display:flex;gap:4px;margin-top:8px">
-        ${s.colors.map(c => `<div style="width:24px;height:24px;background:${c};border-radius:4px"></div>`).join('')}
-      </div>
-    </div>
-  `).join('');
-}
-
-checkAuth();
+document.getElementById('tg').onclick = ()=>{isLogin=!isLogin;document.getElementById('at').innerText=isLogin?'Login':'Sign Up';document.getElementById('ab').innerText=isLogin?'Login':'Create Account';document.getElementById('tg').innerText=isLogin?'Need account? Sign up':'Already have account? Login';};
+document.getElementById('ab').onclick = async ()=>{const e=document.getElementById('em').value,p=document.getElementById('pw').value,b=document.getElementById('ab');b.disabled=true;try{const r=isLogin?await sb.auth.signInWithPassword({email:e,password:p}):await sb.auth.signUp({email:e,password:p});if(r.error)alert(r.error.message);else location.reload();}catch(err){alert(err.message)}b.disabled=false;};
+(async()=>{const {data}=await sb.auth.getUser();if(data.user){document.getElementById('auth').classList.add('hidden');document.getElementById('app').classList.remove('hidden');}})();
+document.getElementById('an').onclick = async ()=>{const url=document.getElementById('yt').value;if(!url)return alert('Paste URL');const b=document.getElementById('an');b.disabled=true;b.innerText='Analyzing...';try{const r=await fetch(AI+'/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({youtube_url:url})});const d=await r.json();document.getElementById('tt').innerText=d.title;document.getElementById('vb').innerText=d.vibe;document.getElementById('im').src=d.thumbnail;const cl=document.getElementById('cl');cl.innerHTML='';d.colors.forEach(c=>{const x=document.createElement('div');x.className='c';x.style.background=c;cl.appendChild(x)});document.getElementById('rs').classList.remove('hidden');const {data:{user}}=await sb.auth.getUser();await sb.from('styles').insert({user_id:user.id,name:d.title,youtube_url:url,vibe:d.vibe,colors:d.colors});}catch(e){alert('Error: '+e.message)}b.disabled=false;b.innerText='Analyze Vibe';};
 </script>
 </body>
 </html>
